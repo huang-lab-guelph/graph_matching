@@ -1,0 +1,42 @@
+# Default configuration for NMR graph matching
+
+# Model architecture
+model:
+  peak_feature_dim: 4          # [H_shift, C_shift, intensity, confidence]
+  methyl_feature_dim: 10       # [x, y, z, residue_one_hot(6), res_num]
+  embedding_dim: 64            # Dimension of node embeddings
+  hidden_dim: 128              # Hidden layer dimension
+  num_encoder_layers: 3        # Number of GNN encoder layers
+  num_consensus_layers: 2      # Number of consensus refinement layers
+  gnn_type: "gcn"              # GNN type: 'gcn' or 'gat'
+  dropout: 0.1                 # Dropout probability
+  sinkhorn_iterations: 20      # Sinkhorn algorithm iterations
+  sinkhorn_tau: 0.05           # Sinkhorn temperature
+
+# Data processing
+data:
+  distance_cutoff: 10.0        # Distance cutoff for methyl network edges (Angstroms)
+  shift_normalization: "standard"  # Normalization method: 'standard', 'minmax', 'none'
+  confidence_threshold: 0.0    # Minimum confidence for peak network edges
+
+# Training parameters
+training:
+  num_epochs: 100              # Number of training epochs
+  learning_rate: 0.001         # Initial learning rate
+  weight_decay: 0.0001         # Weight decay for regularization
+  batch_size: 1                # Batch size (typically 1 for graph matching)
+  num_workers: 0               # Number of data loading workers
+  save_every: 10               # Save checkpoint every N epochs
+  validate_every: 1            # Validate every N epochs
+
+# Loss function weights
+loss_weights:
+  matching_weight: 1.0         # Weight for matching loss (cross-entropy)
+  distance_weight: 0.1         # Weight for distance consistency loss
+  permutation_weight: 0.01     # Weight for permutation loss
+  distance_threshold: 10.0     # Distance threshold for consistency loss (Angstroms)
+
+# Output formatting
+output:
+  confidence_threshold: 0.5    # Minimum confidence for reporting
+  top_k_alternatives: 3        # Number of alternative assignments to report

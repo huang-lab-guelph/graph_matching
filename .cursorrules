@@ -1,0 +1,39 @@
+# Cursor Rules for NMR Graph Matching Project
+
+## Project Context
+This is a deep learning project for automated methyl assignment in NMR spectroscopy.
+- Technology: PyTorch, PyTorch Geometric, BioPython, uv package manager
+- Model: DGMC (Deep Graph Matching Consensus)
+- Purpose: Match experimental NMR peaks to protein structure methyls
+
+## Key Files
+- **CLAUDE.md**: Essential project context for AI assistants
+- **README.md**: User-facing documentation
+- **src/nmr_graph_matching/**: Main package code
+- **scripts/**: CLI tools for training/prediction
+- **configs/**: YAML configuration files
+
+## Code Style
+- Use type hints
+- Follow existing patterns in the codebase
+- Keep modules under 1000 lines
+- Add docstrings to public functions
+- Use PyTorch Geometric Data objects for graphs
+
+## Common Tasks
+- Training: `uv run python scripts/train_model.py`
+- Prediction: `uv run python scripts/predict.py`
+- Tests: `uv run pytest tests/`
+- Generate data: `uv run python scripts/generate_synthetic_data.py`
+
+## When Helping
+1. Check CLAUDE.md for project context
+2. Refer to README.md for user documentation
+3. Follow existing code patterns
+4. Test changes with pytest
+5. Update relevant documentation
+
+## Dependencies
+- Managed by uv (pyproject.toml)
+- Add with: `uv add package_name`
+- Sync with: `uv sync`
