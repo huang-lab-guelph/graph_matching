@@ -1,0 +1,7 @@
+uv
+pytest
+pygmtools
+torch
+networkx
+torch_geometric
+biopython

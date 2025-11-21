@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-wheel-metadata/
+.idea/
+*.egg-info/
+dist/
+build/
+
+# uv
+.uv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data
+data/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+tmp/
