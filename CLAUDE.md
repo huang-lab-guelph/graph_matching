@@ -1,138 +1,189 @@
-# Claude Context: NMR Graph Matching Project
+# Claude Context: Methyl Assignment Project
 
 This document provides AI assistants with essential context about this repository.
 
 ## Project Purpose
 
-Deep learning system for automated methyl assignment in NMR spectroscopy using graph neural networks. Matches experimental NMR peak networks with structural methyl networks.
+This project is a Python library for automated methyl assignment of NMR spectra. It uses graph matching algorithms to correlate NOE (Nuclear Overhauser Effect) connectivity patterns from experimental NMR data with structural information from protein models.
+
+The library has three main components:
+1. **File Readers**: Parse PDB structures and NMR spectra files
+2. **Graph Matching**: Match experimental connectivity to structural connectivity
+3. **Output Writers**: Export assignment results in various formats
 
 ## Architecture Overview
 
 ### Core Problem
-Match two graphs:
-- **Graph A (Peak Network)**: NMR peaks (nodes) + NOE correlations (edges)
-- **Graph B (Methyl Network)**: Methyl positions (nodes) + spatial distances (edges)
+Match experimental NMR peak networks (with NOE connectivity) to structural methyl networks derived from protein structures. This is a graph-to-graph matching problem where:
+- **Graph A**: NMR peaks as nodes, NOE correlations as edges
+- **Graph B**: Methyl groups in protein structure as nodes, spatial distances as edges
 
 ### Technology Stack
-- **Deep Learning**: PyTorch + PyTorch Geometric
-- **Model**: DGMC (Deep Graph Matching Consensus) with GCN/GAT encoders
-- **Data**: BioPython (PDB), nmrglue (NMR), NumPy/SciPy
+- **Language**: Python 3.13
 - **Package Manager**: uv
+- **Key Libraries**:
+  - NumPy/SciPy - Numerical computing
+  - NetworkX or PyTorch Geometric - Graph processing
+  - BioPython - PDB file parsing
+  - PyYAML - Configuration files
+- **Testing**: pytest
+- **Formatting**: black, isort
+- **Linting**: ruff
 
 ## Code Organization
 
 ```
-src/nmr_graph_matching/
-├── data/           # PDB & NMR parsers (pdb_parser.py, nmr_parser.py)
-├── graphs/         # Graph builders (methyl_network.py, peak_network.py)
-├── models/         # DGMC model (dgmc.py, matching.py)
-├── training/       # Training (dataset.py, losses.py, trainer.py)
-└── utils/          # Output (output_formatter.py)
+src/
+├── methyl_match/
+│   ├── __init__.py
+│   ├── matching/           # Graph matching algorithms
+│   ├── reading/            # File parsers (PDB, NOESY, HMQC)
+│   ├── writing/            # Output formatters
+│   └── preprocessing/      # Graph construction from raw data
 
 scripts/
-├── train_model.py              # Training script
-├── predict.py                  # Inference script
-├── generate_synthetic_data.py  # Synthetic data generation
-└── download_test_data.sh       # Get MAGIC test data
-```
+├── run_yme1l.py            # Example: Run specific protein
+└── run.py                  # General execution script
 
+data/
+├── sample1/
+│   ├── structure.pdb       # Protein structure
+│   ├── noesy.txt           # NOE connectivity data
+│   └── config.yaml         # Analysis parameters
+└── sample2/
+    ├── structure.pdb
+    ├── noesy.txt
+    └── config.yaml
+
+models/                      # Trained models (if using ML)
+├── model1.pkl
+└── model2.pkl
+
+tests/
+├── test_reading.py
+├── test_preprocessing.py
+├── test_matching.py
+├── test_writing.py
+└── integration/            # End-to-end tests
+```
 ## Key Components
 
-### 1. Data Parsing
-- **PDBParser**: Extracts methyl groups (LEU, VAL, ILE, ALA, THR, MET) from PDB structures
-- **HMQCParser**: Reads 2D ¹H-¹³C correlation peak lists (XEASY, NMRPipe, Sparky, CSV)
-- **NOESYParser**: Reads 3D NOE peak lists, matches cross-peaks with HMQC
+### 1. reading Module
+- **Purpose**: Parse specialized NMR and structural files
+- **Key Classes**:
+  - `PDBParser` - Extracts methyl groups from PDB structure files
+  - `NOESYParser` - Parses NOESY peak lists (NOE connectivity)
+  - `HMQCParser` - Parses HMQC peak lists (chemical shifts)
+- **Supported Formats**: XEASY, NMRPipe, Sparky, CSV
 
-### 2. Graph Construction
-- **MethylNetworkBuilder**: Creates PyG Data with node features [x,y,z, residue_type_one_hot, res_num], edge features [distance, weight]
-- **PeakNetworkBuilder**: Creates PyG Data with node features [H_shift, C_shift, intensity, confidence], edge features [NOE_intensity, confidence]
+### 2. preprocessing Module
+- **Purpose**: Convert parsed data into graph representations
+- **Key Classes**:
+  - `MethylNetworkBuilder` - Creates graph from PDB methyl groups (nodes=methyls, edges=distances)
+  - `PeakNetworkBuilder` - Creates graph from NMR peaks (nodes=peaks, edges=NOE correlations)
+- **Graph Features**:
+  - Node features: positions, chemical shifts, residue types
+  - Edge features: distances, NOE intensities
 
-### 3. Model
-- **DGMCModel**: Graph encoders → similarity matrix → consensus refinement → Sinkhorn → assignments
-- **Loss Functions**: Matching (cross-entropy), Distance consistency (NOE-distance correlation), Permutation (doubly-stochastic)
+### 3. matching Module
+- **Purpose**: Perform graph-to-graph matching
+- **Key Classes**:
+  - `GraphMatcher` - Abstract base class for matching algorithms
+  - `GreedyMatcher` - Simple greedy matching
+  - `OptimalMatcher` - Optimal matching (Hungarian algorithm)
+  - `MLMatcher` - Machine learning-based matching (if applicable)
+- **Output**: Mapping between NMR peaks and structural methyl groups
 
-### 4. Training
-- **NMRDataset**: Loads triplets (PDB, HMQC, NOESY), constructs graphs, extracts ground truth
-- **Trainer**: Training loop, validation, checkpointing, best model selection
-
-### 5. Output
-- **OutputFormatter**: Formats results as text/CSV/PyMOL, computes confidence scores and NOE completeness
-
-## File Requirements
-
-Each protein needs 3 files:
-- `protein.pdb` - 3D structure
-- `protein_hmqc.txt` - 2D methyl peaks
-- `protein_noesy.txt` - 3D NOE cross-peaks
-
-Naming convention: `<name>.pdb`, `<name>_hmqc.txt`, `<name>_noesy.txt`
+### 4. writing Module
+- **Purpose**: Export assignment results
+- **Key Classes**:
+  - `TextFormatter` - Human-readable text output
+  - `CSVFormatter` - Tabular CSV output
+  - `PyMOLFormatter` - Visualization scripts for PyMOL
+- **Output Information**: Assignments, confidence scores, validation metrics
 
 ## Common Tasks
 
-### Training
+### Running the Application
 ```bash
-uv run python scripts/train_model.py \
-    --config configs/default_config.yaml \
-    --data-dir data/raw \
-    --epochs 100
+# Using uv (recommended)
+uv run python scripts/run.py --data-dir data/sample1
+
+# For specific protein example
+uv run python scripts/run_yme1l.py
+
+# Direct Python
+python -m methyl_match --data-dir data/sample1
 ```
 
-### Prediction
+### Running Tests
 ```bash
-uv run python scripts/predict.py \
-    --checkpoint checkpoints/best_model.pt \
-    --pdb protein.pdb \
-    --hmqc hmqc.txt \
-    --noesy noesy.txt \
-    --output results.txt
+# All tests
+uv run pytest
+
+# With coverage
+uv run pytest --cov=methyl_match --cov-report=html
+
+# Specific module tests
+uv run pytest tests/test_reading.py -v
+uv run pytest tests/test_matching.py -v
+
+# Integration tests
+uv run pytest tests/integration/ -v
 ```
 
-### Generate Synthetic Data
+### Code Formatting & Linting
 ```bash
-uv run python scripts/generate_synthetic_data.py \
-    --pdb structure.pdb \
-    --output-dir data/raw
+# Format code
+uv run black src/ tests/
+
+# Sort imports
+uv run isort src/ tests/
+
+# Lint
+uv run ruff check src/ tests/
+
+# Fix auto-fixable lint issues
+uv run ruff check --fix src/ tests/
 ```
 
 ## Configuration
 
-`configs/default_config.yaml` contains:
-- Model architecture (embedding_dim, hidden_dim, gnn_type)
-- Data processing (distance_cutoff, shift_normalization)
-- Training (learning_rate, num_epochs, batch_size)
-- Loss weights (matching_weight, distance_weight, permutation_weight)
+Configuration files are stored in each data sample directory as `config.yaml`. Key configuration options:
 
-## Key Classes & Methods
+- **matching_algorithm**: Algorithm to use (greedy, optimal, ml)
+- **distance_cutoff**: Maximum distance for structural edges (Å)
+- **noe_threshold**: Minimum NOE intensity to include
+- **confidence_threshold**: Minimum confidence for assignments
+- **output_format**: Output format (text, csv, pymol, all)
 
-### PDBParser
-- `parse(pdb_file)` → List[MethylGroup]
-- `get_summary()` → Dict[residue_type, count]
-- `compute_distance_matrix()` → np.ndarray
 
-### HMQCParser / NOESYParser
-- `parse(filepath, format=None)` → List[Peak]
-- `match_with_hmqc(hmqc_peaks)` → List[NOECrosspeaks]
+## Data Flow
 
-### MethylNetworkBuilder / PeakNetworkBuilder
-- `build(...)` → Data (PyTorch Geometric)
-- `get_adjacency_matrix(data)` → np.ndarray
+1. **Input**: User provides data directory containing:
+   - `structure.pdb` - Protein structure
+   - `noesy.txt` - NOE connectivity data
+   - `config.yaml` - Analysis parameters
 
-### DGMCModel
-- `forward(peak_graph, methyl_graph)` → matching_matrix, embeddings
-- `predict_assignments(matching_matrix, method='hungarian')` → assignments, confidences
+2. **Reading**: Parse files into structured data
+   - Extract methyl groups from PDB
+   - Parse NOESY peak lists and correlations
+   - Load configuration parameters
 
-### Trainer
-- `train_epoch()` → Dict[loss_components]
-- `validate()` → Dict[metrics]
-- `save_checkpoint(filename)`
+3. **Preprocessing**: Build graph representations
+   - Methyl network: nodes=methyls, edges=spatial distances
+   - Peak network: nodes=peaks, edges=NOE correlations
 
-## Data Sources
+4. **Matching**: Apply graph matching algorithm
+   - Compare graph topologies
+   - Score potential assignments
+   - Find optimal mapping
 
-1. **MAGIC repository**: `./scripts/download_test_data.sh`
-2. **Synthetic from PDB**: `scripts/generate_synthetic_data.py`
-3. **BMRB database**: https://bmrb.io/ (real experimental data)
-4. **PDB structures**: https://www.rcsb.org/
-5. **AlphaFold**: https://alphafold.ebi.ac.uk/
+5. **Output**: Write results to files
+   - Text summary of assignments
+   - CSV table for downstream analysis
+   - PyMOL script for visualization
+
 
 ## Testing
 
@@ -140,52 +191,164 @@ Run tests: `uv run pytest tests/ -v`
 
 Basic import test:
 ```python
-from nmr_graph_matching import (
-    PDBParser, HMQCParser, NOESYParser,
-    MethylNetworkBuilder, PeakNetworkBuilder,
-    DGMCModel, Trainer, OutputFormatter
-)
+from methyl_match.reading import PDBParser, NOESYParser, HMQCParser
+from methyl_match.preprocessing import MethylNetworkBuilder, PeakNetworkBuilder
+from methyl_match.matching import GraphMatcher, GreedyMatcher, OptimalMatcher
+from methyl_match.writing import TextFormatter, CSVFormatter, PyMOLFormatter
 ```
 
-## Common Issues
+Example test structure:
+```python
+def test_pdb_parser():
+    parser = PDBParser("data/sample1/structure.pdb")
+    methyls = parser.extract_methyls()
+    assert len(methyls) > 0
+    assert all(hasattr(m, 'residue_name') for m in methyls)
+```
 
-1. **No methyl groups found**: PDB missing LEU/VAL/ILE residues or incorrect atom names
-2. **No NOESY cross-peaks**: Increase tolerance (default 0.05 ppm) or check format
-3. **CUDA OOM**: Reduce embedding_dim/hidden_dim or use CPU
-4. **Poor accuracy**: Need more training data (5-10 proteins minimum)
 
 ## Development Notes
 
-- **Batch size**: Typically 1 for graph matching (different graph sizes)
-- **Normalization**: Chemical shifts use standard normalization by default
-- **Distance cutoff**: 10Å default for methyl networks (NOE observable range)
-- **Loss weights**: matching=1.0, distance=0.1, permutation=0.01 (defaults)
-
-## Scientific Background
-
-Based on:
-- **MAGIC algorithm**: https://pmc.ncbi.nlm.nih.gov/articles/PMC5764113/
-- **DGMC paper**: https://arxiv.org/abs/2001.09621
-
-Methyl-TROSY NMR is used for large proteins. Assignment challenge: match observed peaks to specific methyls in structure using NOE distance constraints.
+- **Code Style**: Follow PEP 8
+- **Type Hints**: Use type hints for all function signatures
+- **Docstrings**: Use Google or NumPy style docstrings
+- **Error Handling**: Use specific exceptions, avoid bare `except:`
+- **Logging**: Use the `logging` module instead of print statements
 
 ## Important Conventions
 
-- Peak IDs are 1-indexed in files but 0-indexed in code
-- Chemical shifts: H (0.5-2.0 ppm), C (15-30 ppm) for methyls
-- Ground truth in training: assignment strings like "L15CD1" in HMQC files
-- Residue naming: One-letter + number + atom (e.g., "L15CD1" = Leu 15 CD1)
+- **Methyl Group Naming**: Follow IUPAC naming (e.g., LEU-CD1, VAL-CG1)
+- **Coordinate System**: PDB uses Ångström units
+- **Graph Representation**: Use consistent node/edge feature ordering
+- **File Naming**: `<protein>_<experiment>.txt` convention
+- **Confidence Scores**: Range from 0.0 (uncertain) to 1.0 (certain)
 
 ## When Modifying
 
-- **Add GNN layer**: Edit `models/dgmc.py` GraphEncoder class
-- **New loss**: Add to `training/losses.py`, integrate in CombinedLoss
-- **New file format**: Add parser method to `data/nmr_parser.py`
-- **Visualization**: Methods in graph builders use matplotlib/networkx
-- **Tests**: Add to `tests/test_basic.py`
+### Add New Feature
+1. Create issue/branch describing the feature
+2. Add tests first (TDD approach)
+3. Implement feature in appropriate module
+4. Update documentation and examples
+5. Ensure all tests pass
 
-## Dependencies Notes
+### Fix Bug
+1. Write failing test that reproduces bug
+2. Fix the bug
+3. Verify test now passes
+4. Add regression test if needed
 
-- PyTorch Geometric requires specific PyTorch version compatibility
-- nmrglue may need specific NumPy version
-- Use `uv sync` to handle all compatibility automatically
+### Add New Matching Algorithm
+1. Inherit from `GraphMatcher` base class
+2. Implement required methods: `match()`, `score()`
+3. Add to algorithm registry in config
+4. Add unit tests with known-good examples
+5. Update documentation
+
+### Add New File Format
+1. Create parser class in `reading/` module
+2. Implement format detection and parsing
+3. Add comprehensive tests with sample files
+4. Update supported formats list in docs
+
+
+## Project Structure Template
+
+When adding new modules, follow this structure:
+
+```python
+"""
+Module description.
+
+This module provides [functionality description].
+"""
+
+import logging
+from typing import Optional, List, Dict
+
+logger = logging.getLogger(__name__)
+
+
+class ClassName:
+    """
+    Brief description.
+
+    Detailed description of the class purpose and usage.
+
+    Attributes:
+        attr1: Description
+        attr2: Description
+    """
+
+    def __init__(self, param1: str, param2: int = 0):
+        """
+        Initialize ClassName.
+
+        Args:
+            param1: Description
+            param2: Description (default: 0)
+        """
+        self.attr1 = param1
+        self.attr2 = param2
+
+    def method(self, param: str) -> Optional[str]:
+        """
+        Brief description.
+
+        Args:
+            param: Description
+
+        Returns:
+            Description of return value
+
+        Raises:
+            ValueError: When [condition]
+        """
+        try:
+            # Implementation
+            pass
+        except Exception as e:
+            logger.error(f"Error in method: {e}")
+            raise
+
+
+def function_name(param1: str, param2: Optional[int] = None) -> Dict:
+    """
+    Brief description.
+
+    Args:
+        param1: Description
+        param2: Description (default: None)
+
+    Returns:
+        Description of return value
+    """
+    # Implementation
+    pass
+```
+
+## Common Issues & Solutions
+
+### Issue: Parser fails on specific file format
+- **Cause**: Format variant not yet supported
+- **Solution**: Check file format, add format detection logic, or convert to supported format
+
+### Issue: Graph matching produces poor results
+- **Cause**: Insufficient NOE data or incorrect distance cutoffs
+- **Solution**: Adjust `distance_cutoff` and `noe_threshold` parameters, verify data quality
+
+### Issue: Import errors after installation
+- **Cause**: Dependencies not installed
+- **Solution**: Run `uv sync` to ensure all dependencies are installed
+
+## Resources
+
+- **NMR File Formats**: XEASY, NMRPipe, Sparky documentation
+- **Graph Matching**: Hungarian algorithm, optimal transport
+- **BioPython PDB**: https://biopython.org/wiki/The_Biopython_Structural_Bioinformatics_FAQ
+- **Related Tools**: PINE, FLYA, MAGIC for NMR assignment
+
+---
+
+**Last Updated**: 2025-11-21
+**Project**: Methyl Assignment via Graph Matching
