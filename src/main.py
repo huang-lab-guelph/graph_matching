@@ -118,9 +118,9 @@ def run_inference_pipeline(
     print("\n--- Starting Inference ---")
     model.eval()
 
-    # 1. Load and preprocess inference data
-    print("Loading and preprocessing inference NMR data...")
-    hmqc_peaks, cch_peaks = load_dataset_from_files(hmqc_path, cch_path)
+    # 1. Load and preprocess inference data with filtering
+    print("Loading and preprocessing inference NMR data (with methyl type filter)...")
+    hmqc_peaks, cch_peaks = load_dataset_from_files(hmqc_path, cch_path, filter_specific_types=True)
     if not hmqc_peaks or not cch_peaks:
         print("Failed to load inference data. Exiting.")
         return
@@ -128,11 +128,11 @@ def run_inference_pipeline(
     experimental_graph = preprocess_data(hmqc_peaks, cch_peaks)
     print(f"Inference experimental graph constructed with {experimental_graph.number_of_nodes()} nodes and {experimental_graph.number_of_edges()} edges.")
 
-    # 2. Generate ground truth graph for inference
-    print("Preprocessing PDB file for inference...")
+    # 2. Generate ground truth graph for inference with filtering
+    print("Preprocessing PDB file for inference (with methyl type filter)...")
     preprocessed_pdb_path = pdb_path.replace(".pdb", "_preprocessed.pdb")
     preprocess_pdb_file(pdb_path, preprocessed_pdb_path)
-    ground_truth_graph = calculate_noe_network(preprocessed_pdb_path)
+    ground_truth_graph = calculate_noe_network(preprocessed_pdb_path, filter_specific_methyl_types=True)
     os.remove(preprocessed_pdb_path) # Clean up
     print(f"Inference ground truth graph constructed with {ground_truth_graph.number_of_nodes()} nodes and {ground_truth_graph.number_of_edges()} edges.")
     
@@ -157,12 +157,12 @@ def run_inference_pipeline(
 
     print("--- Inference Finished ---\n")
 
-def load_dataset_from_files(hmqc_path: str, cch_path: str):
+def load_dataset_from_files(hmqc_path: str, cch_path: str, filter_specific_types: bool = False):
     """
     Helper function to load a dataset from specific HMQC and CCH files.
     """
-    hmqc_peaks = load_hmqc_peak_list(hmqc_path)
-    cch_peaks = load_cch_noesy_peak_list(cch_path)
+    hmqc_peaks = load_hmqc_peak_list(hmqc_path, filter_specific_types)
+    cch_peaks = load_cch_noesy_peak_list(cch_path) # CCH list doesn't need filtering by type
     return hmqc_peaks, cch_peaks
 
 
@@ -172,7 +172,8 @@ if __name__ == "__main__":
     training_pdb_path = "data/1IEP.pdb"
     
     print("--- Preparing for Training ---")
-    hmqc_peaks_train, cch_peaks_train = load_dataset(training_data_dir)
+    # For training, we still use all methyl types in the training data
+    hmqc_peaks_train, cch_peaks_train = load_dataset(training_data_dir, filter_specific_types=False)
     
     if not hmqc_peaks_train or not cch_peaks_train:
         print("Failed to load training data. Exiting.")
@@ -181,7 +182,7 @@ if __name__ == "__main__":
         
         preprocessed_pdb_path_train = training_pdb_path.replace(".pdb", "_preprocessed.pdb")
         preprocess_pdb_file(training_pdb_path, preprocessed_pdb_path_train)
-        gt_graph_train = calculate_noe_network(preprocessed_pdb_path_train)
+        gt_graph_train = calculate_noe_network(preprocessed_pdb_path_train, filter_specific_methyl_types=False)
         os.remove(preprocessed_pdb_path_train)
 
         random_graph_train = nx.gnp_random_graph(n=50, p=0.3, seed=42)

@@ -1,16 +1,21 @@
 """
 Module for the Deep Learning Graph Matching Model, implementing a
 Graph Matching Network (GMN) architecture for similarity learning, and
-a simple nearest-neighbor assignment method.
+using pygmtools for the final assignment.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import pygmtools as pygm
 import networkx as nx
 from torch_geometric.data import Data
 from torch_geometric.nn import GCNConv, global_mean_pool
 from typing import Dict, Any, List, Tuple
+
+# Set the pygmtools backend to pytorch
+pygm.set_backend('pytorch')
+
 
 class GNNEncoder(torch.nn.Module):
     """
@@ -33,8 +38,7 @@ class GNNEncoder(torch.nn.Module):
 
 class GraphMatchingModel(torch.nn.Module):
     """
-    Graph Matching Model that uses a GNN for similarity learning and a nearest-neighbor
-    approach in the embedding space for assignment.
+    Graph Matching Model that uses a GNN for similarity learning and pygmtools for assignment.
     """
     def __init__(self, in_channels: int, hidden_channels: int, out_channels: int, num_layers: int = 2):
         super().__init__()
@@ -52,9 +56,11 @@ class GraphMatchingModel(torch.nn.Module):
         embeddings1 = self.gnn_encoder(data1.x, data1.edge_index)
         embeddings2 = self.gnn_encoder(data2.x, data2.edge_index)
         
+        # Aggregate embeddings to graph level
         graph_embedding1 = global_mean_pool(embeddings1, torch.zeros(embeddings1.shape[0], dtype=torch.long, device=embeddings1.device))
         graph_embedding2 = global_mean_pool(embeddings2, torch.zeros(embeddings2.shape[0], dtype=torch.long, device=embeddings2.device))
         
+        # Concatenate graph embeddings
         combined_embedding = torch.cat([graph_embedding1, graph_embedding2], dim=1)
         
         similarity_score = self.similarity_fc(combined_embedding)
@@ -63,7 +69,7 @@ class GraphMatchingModel(torch.nn.Module):
 
     def get_assignments(self, data1: Data, data2: Data) -> Dict[int, int]:
         """
-        Get peak assignments using a nearest-neighbor search in the GNN embedding space.
+        Get one-to-one peak assignments using the trained GNN and the Hungarian algorithm.
         
         Returns:
             A dictionary mapping node indices from graph1 to graph2.
@@ -87,9 +93,14 @@ class GraphMatchingModel(torch.nn.Module):
             # Compute cosine similarity matrix
             similarity_matrix = torch.matmul(embeddings1_norm, embeddings2_norm.t())
             
-            # For each node in graph1, find the node in graph2 with the highest similarity
+            # Use the Hungarian algorithm to find the optimal one-to-one assignment
+            # The hungarian solver finds the assignment that maximizes the total similarity.
+            X_discrete = pygm.hungarian(similarity_matrix.unsqueeze(0)).squeeze(0)
+
+            # Convert permutation matrix to assignment dictionary
             assignments = {
-                i: j.item() for i, j in enumerate(similarity_matrix.argmax(dim=1))
+                i: j.item() for i, j in enumerate(X_discrete.argmax(dim=1))
+                if X_discrete[i,j] > 0 # Only include actual assignments
             }
             
             return assignments
