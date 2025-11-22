@@ -14,6 +14,14 @@ from methyl_match.preprocessing import (
     PeakNetworkBuilder,
     PeakNetwork,
 )
+from methyl_match.matching import (
+    GraphMatcher,
+    MatchingResult,
+    GreedyMatcher,
+    HungarianMatcher,
+    QAPMatcher,
+    SpectralMatcher,
+)
 
 __all__ = [
     "PDBParser",
@@ -23,4 +31,10 @@ __all__ = [
     "MethylNetwork",
     "PeakNetworkBuilder",
     "PeakNetwork",
+    "GraphMatcher",
+    "MatchingResult",
+    "GreedyMatcher",
+    "HungarianMatcher",
+    "QAPMatcher",
+    "SpectralMatcher",
 ]

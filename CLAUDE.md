@@ -81,9 +81,16 @@ tests/
 - **Key Classes**:
   - `MethylNetworkBuilder` - Creates graph from PDB methyl groups (nodes=methyls, edges=distances)
   - `PeakNetworkBuilder` - Creates graph from NMR peaks (nodes=HMQC peaks, edges=13C-13C-1H methyl-methyl NOE correlations)
+  - `overlap_diagnostics` - Analyzes chemical shift overlap and ambiguity
 - **Graph Features**:
   - Node features: positions, chemical shifts, residue types
-  - Edge features: distances, methyl-methyl NOE intensities
+  - Edge features: distances, methyl-methyl NOE intensities, ambiguity scores
+- **Overlap Handling** (New Features):
+  - **Best Match by Distance**: Selects closest peak instead of first match
+  - **2D Matching**: Uses both 13C and 1H dimensions for better discrimination
+  - **Multiple Edge Hypotheses**: Creates all plausible edges for ambiguous NOE peaks
+  - **Ambiguity Tracking**: Full metadata on edge certainty and candidate counts
+  - **Diagnostic Tools**: Pre-build analysis of overlap severity and predictions
 
 ### 3. matching Module
 - **Purpose**: Perform graph-to-graph matching
@@ -157,6 +164,127 @@ Configuration files are stored in each data sample directory as `config.yaml`. K
 - **confidence_threshold**: Minimum confidence for assignments
 - **output_format**: Output format (text, csv, pymol, all)
 
+**Overlap Handling Parameters** (PeakNetworkBuilder):
+- **use_2d_matching**: `bool` (default: `False`) - Enable 2D matching (13C + 1H) for better discrimination
+- **create_ambiguous_edges**: `bool` (default: `False`) - Create multiple edge hypotheses for ambiguous cases
+- **max_ambiguous_candidates**: `int` (default: `3`) - Maximum candidates per dimension for ambiguous edges
+- **chemical_shift_tolerance**: `dict` (default: `{'h': 0.05, 'c': 0.5}`) - Tolerances in ppm
+
+## Handling Chemical Shift Overlap
+
+### The Problem
+Chemical shift overlap in NMR data occurs when multiple HMQC peaks have 13C chemical shifts within the matching tolerance (typically ±0.5 ppm). This creates ambiguity when matching NOESY peaks to HMQC peaks, as one NOE dimension may match multiple HMQC peaks.
+
+**Impact**: With severe overlap (70% of peaks affected), the "first match wins" approach can lead to:
+- Incorrect edge assignments
+- Missing edges (when wrong peak selected)
+- Reduced graph quality for matching algorithms
+
+### Solutions Implemented
+
+#### 1. Best Match by Distance (Always Active)
+Instead of returning the first HMQC peak within tolerance, the system now:
+- Collects ALL candidates within tolerance
+- Sorts by chemical shift distance
+- Returns the CLOSEST match
+- Tracks number of candidates and distances
+
+**Usage**: Automatically active, no configuration needed.
+
+```python
+builder = PeakNetworkBuilder()  # Best match is default behavior
+network = builder.build_network(hmqc_peaks, noe_peaks)
+```
+
+#### 2. 2D Matching (Optional)
+Uses both 13C and 1H dimensions for matching, providing better discrimination when 1H shifts are available in the NOESY data (w3 dimension).
+
+**When to use**:
+- Moderate to severe 13C overlap (>30% of peaks)
+- 1H shifts available in NOESY data
+- Diagnostic report shows 2D matching reduces overlap by >10%
+
+```python
+builder = PeakNetworkBuilder(
+    use_2d_matching=True,
+    chemical_shift_tolerance={'h': 0.05, 'c': 0.5}
+)
+network = builder.build_network(hmqc_peaks, noe_peaks)
+```
+
+#### 3. Multiple Edge Hypotheses (Advanced)
+For severe overlap cases, creates ALL plausible edges instead of just the best match. Each hypothesis is weighted by ambiguity score and distance.
+
+**When to use**:
+- Severe overlap (>50% of peaks affected)
+- No assignment labels available
+- Need to explore all possibilities for downstream matching
+
+```python
+builder = PeakNetworkBuilder(
+    create_ambiguous_edges=True,
+    max_ambiguous_candidates=3  # Top 3 candidates per dimension
+)
+network = builder.build_network(hmqc_peaks, noe_peaks)
+```
+
+**Note**: This creates more edges (up to N×M combinations per NOE peak), increasing graph complexity.
+
+#### 4. Ambiguity Tracking & Reporting
+All edges now include metadata:
+- `ambiguity_score`: 1.0 = certain, lower = more ambiguous (1 / (num_cand_w1 × num_cand_w2))
+- `num_candidates_w1`, `num_candidates_w2`: Number of matching candidates
+- `min_dist_w1`, `min_dist_w2`: Distance to best match
+- `is_hypothesis`: `True` for edges from ambiguous hypotheses
+
+**Accessing reports**:
+```python
+# Get structured report
+report = network.get_ambiguity_report()
+print(f"Average ambiguity score: {report['avg_ambiguity_score']:.3f}")
+print(f"High ambiguity edges: {len(report['high_ambiguity_edges'])}")
+
+# Log human-readable summary
+network.log_ambiguity_summary()
+```
+
+#### 5. Diagnostic Tools (Pre-Build Analysis)
+Analyze overlap BEFORE building the graph to choose appropriate strategy:
+
+```python
+from methyl_match.preprocessing import overlap_diagnostics
+
+# Analyze HMQC overlap
+report = overlap_diagnostics.analyze_hmqc_overlap(
+    hmqc_peaks, c_tolerance=0.5, h_tolerance=0.05
+)
+print(f"Overlap: {report['overlap_stats_1d']['overlap_pct']:.1f}%")
+
+# Predict NOESY ambiguity
+prediction = overlap_diagnostics.analyze_noesy_ambiguity(
+    hmqc_peaks, noe_peaks, c_tolerance=0.5
+)
+print(f"Predicted ambiguous: {prediction['predicted_ambiguous_w1']}")
+
+# Full report with recommendations
+full_report = overlap_diagnostics.generate_overlap_report(hmqc_peaks, noe_peaks)
+print(full_report)
+```
+
+### Decision Guide
+
+| Overlap Severity | Recommended Strategy |
+|-----------------|---------------------|
+| <20% of peaks | Default (best match by distance) |
+| 20-50% of peaks | Enable `use_2d_matching=True` |
+| >50% of peaks | Use `use_2d_matching=True` + `create_ambiguous_edges=True` |
+| Extreme (>70%) | Run diagnostics, consider tighter tolerances or data review |
+
+**Always run diagnostics first**:
+```python
+from methyl_match.preprocessing import overlap_diagnostics
+overlap_diagnostics.log_overlap_diagnostics(hmqc_peaks, noe_peaks)
+```
 
 ## Data Flow
 

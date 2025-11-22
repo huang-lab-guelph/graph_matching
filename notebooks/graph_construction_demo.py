@@ -125,7 +125,7 @@ def _(mo):
 @app.cell
 def _(MethylNetworkBuilder, methyls, mo, nx):
     # Build methyl network with different distance cutoffs
-    distance_cutoff = 12.0  # Ångströms
+    distance_cutoff = 10.0  # Ångströms
 
     methyl_builder = MethylNetworkBuilder(
         distance_cutoff=distance_cutoff,

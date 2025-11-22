@@ -249,14 +249,21 @@ class HMQCParser:
         for line_num, line in enumerate(data_lines, 1):
             try:
                 parts = line.split()
-                if len(parts) < 4:
+                if len(parts) < 3:
                     continue
 
-                # Sparky format: Assignment w1 w2 Height
+                # Sparky format: Assignment w1 w2 [Height]
+                # Height/intensity is optional
                 assignment = parts[0].strip() if parts[0] else None
                 w1 = float(parts[1])  # Often C13
                 w2 = float(parts[2])  # Often H1
-                intensity = float(parts[3])
+
+                # Intensity is optional (default to 1.0 if missing)
+                if len(parts) >= 4:
+                    intensity = float(parts[3])
+                else:
+                    intensity = 1.0
+                    logger.debug(f"Line {line_num}: No intensity column, using default 1.0")
 
                 peak = HMQCPeak(
                     index=line_num,

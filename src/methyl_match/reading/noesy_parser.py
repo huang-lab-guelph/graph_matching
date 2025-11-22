@@ -175,7 +175,7 @@ class NOESYParser:
             return self._parse_xeasy()
 
     def _parse_xeasy(self) -> List[NOEPeak]:
-        """Parse XEASY format peak list."""
+        """Parse XEASY format peak list (also handles Sparky-like format without header)."""
         peaks = []
 
         with open(self.file_path, 'r') as f:
@@ -194,32 +194,55 @@ class NOESYParser:
                         logger.warning(f"Line {line_num}: Not enough columns, skipping")
                         continue
 
-                    # Parse basic fields
-                    index = int(parts[0])
-                    w1 = float(parts[1])
-                    w2 = float(parts[2])
-
-                    # Check if 3D or 2D
+                    # Try to determine format: XEASY (index first) vs Sparky-like (assignment first)
+                    # Try to parse first column as integer
                     try:
-                        w3_candidate = float(parts[3])
-                        intensity_idx = 4
-                        w3 = w3_candidate
-                    except (ValueError, IndexError):
-                        w3 = None
-                        intensity_idx = 3
+                        index = int(parts[0])
+                        # XEASY format: index w1 w2 w3 intensity [assignments]
+                        start_idx = 0
+                        assignment_text = None
+                    except ValueError:
+                        # Sparky-like format: assignment w1 w2 w3 intensity
+                        index = line_num
+                        start_idx = -1  # Shift by -1 since assignment is first
+                        assignment_text = parts[0]
 
-                    # Get intensity
-                    if len(parts) > intensity_idx:
-                        intensity = float(parts[intensity_idx])
+                    # Parse chemical shifts and intensity
+                    if start_idx == -1:
+                        # Sparky-like: assignment w1 w2 w3 intensity
+                        w1 = float(parts[1])
+                        w2 = float(parts[2])
+                        w3 = float(parts[3]) if len(parts) > 3 else None
+                        intensity = float(parts[4]) if len(parts) > 4 else 1.0
                     else:
-                        intensity = 1.0  # Default
+                        # XEASY: index w1 w2 w3 intensity [assignments]
+                        w1 = float(parts[1])
+                        w2 = float(parts[2])
 
-                    # Parse assignments if present
+                        # Check if 3D or 2D
+                        try:
+                            w3_candidate = float(parts[3])
+                            intensity_idx = 4
+                            w3 = w3_candidate
+                        except (ValueError, IndexError):
+                            w3 = None
+                            intensity_idx = 3
+
+                        # Get intensity
+                        if len(parts) > intensity_idx:
+                            intensity = float(parts[intensity_idx])
+                        else:
+                            intensity = 1.0  # Default
+
+                        # Parse assignments if present (after intensity)
+                        if len(parts) > intensity_idx + 1:
+                            assignment_text = ' '.join(parts[intensity_idx + 1:])
+
+                    # Parse assignment text
                     assignment1 = None
                     assignment2 = None
-                    if len(parts) > intensity_idx + 1:
-                        # Assignments might be in format "L8-CD1 <-> V17-CG1"
-                        assignment_text = ' '.join(parts[intensity_idx + 1:])
+                    if assignment_text:
+                        # Assignments might be in format "L8-CD1-V17-CG1" or "L8-CD1 <-> V17-CG1" or just "?"
                         assignments = re.split(r'\s*<?-?>\s*', assignment_text)
                         if len(assignments) >= 2:
                             assignment1 = assignments[0].strip()
