@@ -72,18 +72,18 @@ tests/
 - **Purpose**: Parse specialized NMR and structural files
 - **Key Classes**:
   - `PDBParser` - Extracts methyl groups from PDB structure files
-  - `NOESYParser` - Parses NOESY peak lists (NOE connectivity)
-  - `HMQCParser` - Parses HMQC peak lists (chemical shifts)
+  - `NOESYParser` - Parses 13C-13C-1H methyl-methyl NOESY peak lists (w1=13C methyl 1, w2=13C methyl 2, w3=1H)
+  - `HMQCParser` - Parses 1H-13C HMQC peak lists (chemical shifts)
 - **Supported Formats**: XEASY, NMRPipe, Sparky, CSV
 
 ### 2. preprocessing Module
 - **Purpose**: Convert parsed data into graph representations
 - **Key Classes**:
   - `MethylNetworkBuilder` - Creates graph from PDB methyl groups (nodes=methyls, edges=distances)
-  - `PeakNetworkBuilder` - Creates graph from NMR peaks (nodes=peaks, edges=NOE correlations)
+  - `PeakNetworkBuilder` - Creates graph from NMR peaks (nodes=HMQC peaks, edges=13C-13C-1H methyl-methyl NOE correlations)
 - **Graph Features**:
   - Node features: positions, chemical shifts, residue types
-  - Edge features: distances, NOE intensities
+  - Edge features: distances, methyl-methyl NOE intensities
 
 ### 3. matching Module
 - **Purpose**: Perform graph-to-graph matching
