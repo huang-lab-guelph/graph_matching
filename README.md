@@ -66,16 +66,28 @@ See [notebooks/README.md](notebooks/README.md) for more details.
 
 ## Development Status
 
+**Progress: 2/6 Phases Complete (33%)**
+
 **Phase 1: Foundation & File Readers** ✅ **COMPLETED**
 
 - ✅ PDB structure parsing (43 methyls from ubiquitin)
 - ✅ Multi-format 13C-13C-1H methyl-methyl NOESY parsing (XEASY, Sparky, CSV)
 - ✅ Multi-format HMQC parsing with chemical shift matching
 - ✅ 34 comprehensive tests (100% passing)
-- ✅ Interactive marimo notebook with visualizations
+- ✅ Interactive marimo notebook: [reading_demo.py](notebooks/reading_demo.py)
 - ✅ Distance and correlation matrix calculations
 
-**Next**: Phase 2 - Graph Construction
+**Phase 2: Graph Construction** ✅ **COMPLETED**
+
+- ✅ Methyl network construction from PDB structures
+- ✅ Peak network construction from 13C-13C-1H NOESY data
+- ✅ Rich feature vectors (10D methyl, 4D peak)
+- ✅ Multiple edge weight functions
+- ✅ 21 preprocessing tests (55 total, 100% passing)
+- ✅ Interactive marimo notebook: [graph_construction_demo.py](notebooks/graph_construction_demo.py)
+- ✅ NetworkX integration complete
+
+**Next**: Phase 3 - Matching Algorithms
 
 See [PLAN.md](PLAN.md) for the complete development roadmap.
 
@@ -97,15 +109,15 @@ uv run pytest tests/test_reading.py -v
 ```
 methyl_match/
 ├── src/methyl_match/       # Main package
-│   ├── reading/            # File parsers ✓
-│   ├── preprocessing/      # Graph construction (coming soon)
-│   ├── matching/           # Matching algorithms (coming soon)
-│   └── writing/            # Output formatters (coming soon)
-├── tests/                  # Test suite ✓
-├── data/test/              # Example data ✓
-├── notebooks/              # Interactive marimo notebooks ✓
-├── scripts/                # Utility scripts (coming soon)
-└── docs/                   # Documentation (coming soon)
+│   ├── reading/            # File parsers ✅
+│   ├── preprocessing/      # Graph construction ✅
+│   ├── matching/           # Matching algorithms (Phase 3)
+│   └── writing/            # Output formatters (Phase 4)
+├── tests/                  # Test suite ✅ (55 tests)
+├── data/test/              # Example data ✅
+├── notebooks/              # Interactive marimo notebooks ✅ (2 notebooks)
+├── scripts/                # Utility scripts (Phase 5)
+└── docs/                   # Documentation (Phase 6)
 ```
 
 ## Documentation

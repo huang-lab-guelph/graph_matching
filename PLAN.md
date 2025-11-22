@@ -51,32 +51,52 @@
 
 ---
 
-### Phase 2: Graph Construction
+### Phase 2: Graph Construction ✅ COMPLETED
 
 **Goal**: Convert parsed data into graph representations for matching
 
 **Tasks**:
-1. Implement `preprocessing/` module:
-   - `MethylNetworkBuilder` - Create structure graph from PDB methyls
-   - `PeakNetworkBuilder` - Create experimental graph from NMR peaks
-2. Define node and edge feature representations
-3. Implement distance calculation and edge weight logic
-4. Write unit tests for graph builders
+1. ✅ Implement `preprocessing/` module:
+   - ✅ `MethylNetworkBuilder` - Create structure graph from PDB methyls (407 lines)
+   - ✅ `PeakNetworkBuilder` - Create experimental graph from 13C-13C-1H methyl-methyl NOE data (426 lines)
+2. ✅ Define node and edge feature representations
+3. ✅ Implement distance calculation and edge weight logic
+4. ✅ Write unit tests for graph builders (21 tests)
+5. ✅ Create interactive marimo notebook demonstrating functionality
+6. ✅ Correct NOESY format to 13C-13C-1H methyl-methyl
 
 **Deliverables**:
-- [ ] `src/methyl_match/preprocessing/` module
-- [ ] Graph representations with:
-  - Nodes: methyl groups (structure) or peaks (experimental)
-  - Edges: spatial distances (structure) or NOE correlations (experimental)
-  - Features: coordinates, residue types, chemical shifts, intensities
-- [ ] `tests/test_preprocessing.py` with unit tests
-- [ ] Integration with Phase 1 parsers
+- ✅ `src/methyl_match/preprocessing/` module with graph builders
+- ✅ Graph representations with:
+  - Nodes: methyl groups (structure) or HMQC peaks (experimental)
+  - Edges: spatial distances (structure) or 13C-13C-1H NOE correlations (experimental)
+  - Features: 3D coordinates, residue types (10D), chemical shifts, intensities (4D)
+- ✅ `tests/test_preprocessing.py` with comprehensive unit tests (21 tests, all passing)
+- ✅ Integration with Phase 1 parsers (55 total tests passing)
+- ✅ `notebooks/graph_construction_demo.py` - Interactive marimo notebook
+- ✅ Multiple edge weight functions (uniform, inverse, exponential)
 
-**Success Criteria**:
-- Can build structure graph from parsed PDB
-- Can build experimental graph from parsed NOESY/HMQC
-- Graphs contain appropriate node/edge features
-- Edge weights computed correctly based on distances/correlations
+**Success Criteria**: ✅ ALL MET
+- ✅ Can build structure graph from parsed PDB with configurable distance cutoffs
+- ✅ Can build experimental graph from parsed 13C-13C-1H NOESY/HMQC
+- ✅ Graphs contain appropriate node/edge features (10D methyl, 4D peak)
+- ✅ Edge weights computed correctly based on distances/NOE intensities
+- ✅ NetworkX integration working correctly
+
+**Results**:
+- **MethylNetworkBuilder**: Creates spatial graphs with distance-based edges
+  - Configurable distance cutoffs (6-14Å)
+  - Multiple edge weight functions
+  - Rich 10D node features (coords + residue type + res number)
+  - Distance and adjacency matrices
+- **PeakNetworkBuilder**: Creates experimental graphs from 13C-13C-1H NOESY
+  - Intensity threshold filtering
+  - 13C chemical shift matching for methyl-methyl NOE
+  - 4D node features (1H/13C shifts + intensity + degree)
+  - NOE correlation matrices
+- **Test Coverage**: 21 preprocessing tests + 34 reading tests = 55 total (100% passing)
+- **Interactive Demo**: Comprehensive notebook with 14 visualization cells
+- **Parameter Analysis**: Sensitivity analysis for cutoffs and thresholds
 
 ---
 
@@ -204,28 +224,49 @@
 
 ## Current Status
 
-- **Completed Phase**: Phase 1 - Foundation & File Readers ✅
-- **Next Phase**: Phase 2 - Graph Construction
+- **Completed Phases**:
+  - ✅ Phase 1 - Foundation & File Readers
+  - ✅ Phase 2 - Graph Construction
+- **Next Phase**: Phase 3 - Matching Algorithms
 - **Branch**: `new-python-project`
-- **Last Updated**: 2025-11-21
+- **Last Updated**: 2025-11-22
 
 ### Phase 1 Summary
 
 **Completed Components**:
 - ✅ **PDBParser** (263 lines): Extracts methyl groups (LEU, VAL, ILE, ALA, THR, MET)
-- ✅ **NOESYParser** (403 lines): Multi-format support with auto-detection
+- ✅ **NOESYParser** (466 lines): 13C-13C-1H methyl-methyl NOESY with multi-format support
 - ✅ **HMQCParser** (378 lines): Chemical shift parsing and matching
 - ✅ **Test Suite** (34 tests): 100% pass rate with real data
-- ✅ **Marimo Notebook**: Interactive demo with visualizations
-- ✅ **Documentation**: README, PLAN.md, notebooks/README.md
+- ✅ **Marimo Notebook**: [reading_demo.py](notebooks/reading_demo.py) - Interactive demo with visualizations
+- ✅ **Documentation**: README, PLAN.md, CLAUDE.md, notebooks/README.md
 
 **Key Achievements**:
 - Parsed 43 methyl groups from ubiquitin structure (1UBQ)
+- Correct 13C-13C-1H NOESY format for methyl-methyl assignment
 - Auto-detection working for XEASY, Sparky, CSV formats
 - Distance matrix calculations (43×43 methyls)
 - NOE correlation matrices
 - Chemical shift matching with tolerances
 - 100% cross-validation agreement between NOESY and HMQC data
+
+### Phase 2 Summary
+
+**Completed Components**:
+- ✅ **MethylNetworkBuilder** (407 lines): Spatial graphs from PDB structures
+- ✅ **PeakNetworkBuilder** (426 lines): Experimental graphs from 13C-13C-1H NOESY
+- ✅ **Test Suite** (21 tests): 100% pass rate with integration tests
+- ✅ **Marimo Notebook**: [graph_construction_demo.py](notebooks/graph_construction_demo.py) - Comprehensive graph demo
+- ✅ **NetworkX Integration**: Full support for graph operations
+
+**Key Achievements**:
+- Distance-based methyl network construction (configurable cutoffs)
+- 13C-13C-1H methyl-methyl NOE correlation graphs
+- Rich feature vectors (10D methyl nodes, 4D peak nodes)
+- Multiple edge weight functions (uniform, inverse, exponential)
+- Network statistics and visualization tools
+- Parameter sensitivity analysis
+- 55 total tests passing (34 reading + 21 preprocessing)
 
 ---
 
@@ -259,16 +300,24 @@
 - ruff (>=0.1.0) - Linting
 - isort (>=5.12.0) - Import sorting
 
+**Phase 2 Added**:
+- NetworkX (>=3.0) - Graph processing and operations
+
 **Future (for Phase 3)**:
-- NetworkX or PyTorch Geometric - Graph processing
+- PyTorch Geometric - Advanced graph neural networks (optional)
 - PyTorch - ML algorithms (optional)
 
 ### File Naming Conventions
 
 - PDB structures: `<protein>.pdb`
-- NOESY data: `<protein>_noesy.txt` or `<protein>_noesy.csv`
+- 13C-13C-1H methyl-methyl NOESY data: `<protein>_methyl_noesy.txt` or `<protein>_methyl_noesy.csv`
 - HMQC data: `<protein>_hmqc.txt` or `<protein>_hmqc.csv`
 - Configuration: `config.yaml` in data directory
+
+**Note**: NOESY files should be in 13C-13C-1H format where:
+- w1 = 13C chemical shift of first methyl (ppm)
+- w2 = 13C chemical shift of second methyl (ppm)
+- w3 = 1H chemical shift (ppm)
 
 ### Testing Strategy
 
@@ -291,8 +340,8 @@
 
 ## Success Metrics
 
-**Phase 1**: Parsers work with real data, tests pass
-**Phase 2**: Can build graphs from parsed data
+**Phase 1**: ✅ Parsers work with real data, tests pass (34/34 tests)
+**Phase 2**: ✅ Can build graphs from parsed data (21/21 tests, 55/55 total)
 **Phase 3**: At least 2 algorithms produce valid assignments
 **Phase 4**: Results exportable in 3+ formats
 **Phase 5**: End-to-end workflow runs from CLI
@@ -300,4 +349,21 @@
 
 ---
 
-**Next Steps**: Complete Phase 1 by implementing file parsers and tests with downloaded data.
+## Summary of Progress
+
+### Phases Completed: 2/6 (33%)
+
+**Phase 1 (Foundation & File Readers)**: ✅ COMPLETED
+- 3 parsers implemented (1,107 lines)
+- 34 tests, 100% passing
+- 1 interactive notebook with visualizations
+- Correct 13C-13C-1H NOESY format
+
+**Phase 2 (Graph Construction)**: ✅ COMPLETED
+- 2 graph builders implemented (833 lines)
+- 21 tests, 100% passing (55 total)
+- 1 comprehensive interactive notebook with 14 visualizations
+- NetworkX integration complete
+- Rich feature vectors for future matching
+
+**Next Steps**: Begin Phase 3 - Matching Algorithms
