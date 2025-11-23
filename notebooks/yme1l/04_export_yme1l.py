@@ -51,7 +51,6 @@ def _():
     from methyl_match.preprocessing import MethylNetworkBuilder, PeakNetworkBuilder
     from methyl_match.matching import QAPMatcher, HungarianMatcher, GreedyMatcher
     from methyl_match.writing import TextFormatter, CSVFormatter, PyMOLFormatter
-
     return (
         CSVFormatter,
         GreedyMatcher,
@@ -130,15 +129,9 @@ def _(
         G_exp_export,
         G_struct_export,
         data_dir_export,
-        elapsed_time,
-        hmqc_peaks_export,
-        matcher_export,
-        methyls_export,
         network_exp_export,
         network_struct_export,
-        noesy_peaks_export,
         result_export,
-        start_time,
     )
 
 
@@ -153,7 +146,13 @@ def _(mo):
 
 
 @app.cell
-def _(TextFormatter, network_exp_export, network_struct_export, project_root, result_export):
+def _(
+    TextFormatter,
+    network_exp_export,
+    network_struct_export,
+    project_root,
+    result_export,
+):
     # Create output directory
     output_dir_yme1l = project_root / "output" / "yme1l"
     output_dir_yme1l.mkdir(parents=True, exist_ok=True)
@@ -187,7 +186,7 @@ def _(TextFormatter, network_exp_export, network_struct_export, project_root, re
     print("\n".join(text_output_preview.split("\n")[:40]))
     print("...")
     print(f"\n✓ Full text report saved to: {output_dir_yme1l / 'yme1l_assignments_qap.txt'}")
-    return (output_dir_yme1l, text_formatter_yme1l, text_output_preview)
+    return (output_dir_yme1l,)
 
 
 @app.cell
@@ -201,7 +200,13 @@ def _(mo):
 
 
 @app.cell
-def _(TextFormatter, network_exp_export, network_struct_export, output_dir_yme1l, result_export):
+def _(
+    TextFormatter,
+    network_exp_export,
+    network_struct_export,
+    output_dir_yme1l,
+    result_export,
+):
     # High confidence only
     text_formatter_high = TextFormatter(
         confidence_threshold=0.7,
@@ -220,7 +225,7 @@ def _(TextFormatter, network_exp_export, network_struct_export, output_dir_yme1l
     high_conf_count = sum(1 for c in result_export.confidence_scores.values() if c >= 0.7)
     print(f"✓ Exported {high_conf_count} high-confidence assignments (≥0.7)")
     print(f"  File: {output_dir_yme1l / 'yme1l_assignments_high_confidence.txt'}")
-    return (high_conf_count, text_formatter_high)
+    return
 
 
 @app.cell
@@ -234,7 +239,13 @@ def _(mo):
 
 
 @app.cell
-def _(CSVFormatter, network_exp_export, network_struct_export, output_dir_yme1l, result_export):
+def _(
+    CSVFormatter,
+    network_exp_export,
+    network_struct_export,
+    output_dir_yme1l,
+    result_export,
+):
     # Create CSV formatter with all data
     csv_formatter_yme1l = CSVFormatter(
         include_unassigned=True,
@@ -262,7 +273,7 @@ def _(CSVFormatter, network_exp_export, network_struct_export, output_dir_yme1l,
     print("...")
     print(f"\n✓ CSV data saved to: {output_dir_yme1l / 'yme1l_assignments_qap.csv'}")
     print(f"✓ Unassigned peaks saved to: {output_dir_yme1l / 'yme1l_assignments_qap_unassigned.csv'}")
-    return (csv_formatter_yme1l, csv_output)
+    return
 
 
 @app.cell
@@ -276,7 +287,13 @@ def _(mo):
 
 
 @app.cell
-def _(CSVFormatter, network_exp_export, network_struct_export, output_dir_yme1l, result_export):
+def _(
+    CSVFormatter,
+    network_exp_export,
+    network_struct_export,
+    output_dir_yme1l,
+    result_export,
+):
     # High confidence CSV
     csv_formatter_high = CSVFormatter(
         confidence_threshold=0.7,
@@ -292,7 +309,7 @@ def _(CSVFormatter, network_exp_export, network_struct_export, output_dir_yme1l,
     )
 
     print(f"✓ High-confidence CSV saved to: {output_dir_yme1l / 'yme1l_assignments_high_confidence.csv'}")
-    return (csv_formatter_high,)
+    return
 
 
 @app.cell
@@ -351,7 +368,7 @@ def _(
     print(f"\nTo visualize in PyMOL:")
     print(f"  cd {output_dir_yme1l}")
     print(f"  pymol yme1l_visualization.pml")
-    return (pymol_formatter_yme1l, pymol_output)
+    return
 
 
 @app.cell
@@ -416,7 +433,7 @@ def _(
         print(f"    Files: yme1l_assignments_{algo_name_export}.txt/csv")
 
     print("\n✓ All algorithms exported successfully!")
-    return (algo_name_export, algorithms_export, csv_fmt, elapsed, matcher_algo, result_algo, start, text_fmt)
+    return
 
 
 @app.cell
@@ -448,7 +465,7 @@ def _(result_export):
     print(f"  🟡 Medium (0.5-0.7):       {medium_conf} ({100 * medium_conf / result_export.num_assignments:.1f}%)")
     print(f"  🔴 Low (<0.5):             {low_conf} ({100 * low_conf / result_export.num_assignments:.1f}%)")
     print("=" * 60)
-    return (high_conf, low_conf, medium_conf)
+    return
 
 
 @app.cell
