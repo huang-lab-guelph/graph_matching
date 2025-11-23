@@ -147,31 +147,41 @@
 
 ---
 
-### Phase 4: Output & Utilities
+### Phase 4: Output & Utilities ✅ COMPLETED
 
 **Goal**: Export assignment results in multiple formats
 
 **Tasks**:
-1. Implement `writing/` module:
-   - `TextFormatter` - Human-readable summary reports
-   - `CSVFormatter` - Tabular data for analysis
-   - `PyMOLFormatter` - Visualization scripts with confidence coloring
-2. Add confidence scoring logic
-3. Add result validation and quality metrics
-4. Write unit tests for formatters
+1. ✅ Implement `writing/` module:
+   - ✅ `TextFormatter` - Human-readable summary reports (205 lines)
+   - ✅ `CSVFormatter` - Tabular data for analysis (247 lines)
+   - ✅ `PyMOLFormatter` - Visualization scripts with confidence coloring (348 lines)
+2. ✅ Add confidence scoring logic (integrated in base class)
+3. ✅ Add result validation and quality metrics
+4. ✅ Write unit tests for formatters (25 tests)
 
 **Deliverables**:
-- [ ] `src/methyl_match/writing/` module
-- [ ] Support for 3+ output formats
-- [ ] Confidence scores and quality metrics
-- [ ] `tests/test_writing.py` with unit tests
-- [ ] Example output files demonstrating each format
+- ✅ `src/methyl_match/writing/` module with all formatters (4 files, ~900 lines)
+- ✅ Support for 3 output formats (Text, CSV, PyMOL)
+- ✅ Confidence scores and quality metrics in all formats
+- ✅ `tests/test_writing.py` with comprehensive unit tests (25 tests, all passing)
+- ✅ Example output demonstrations in notebooks
+- ✅ `notebooks/writing_demo.py` - Generic writing demo
+- ✅ `notebooks/yme1l/04_export_yme1l.py` - YME1L export notebook
 
-**Success Criteria**:
-- Can export results in all specified formats
-- Output includes assignments, confidence scores, validation metrics
-- PyMOL scripts correctly visualize assignments
-- Formats are compatible with downstream analysis tools
+**Success Criteria**: ✅ ALL MET
+- ✅ Can export results in all specified formats
+- ✅ Output includes assignments, confidence scores, validation metrics
+- ✅ PyMOL scripts correctly visualize assignments with color coding
+- ✅ Formats are compatible with downstream analysis tools
+- ✅ All 122 tests passing (97 previous + 25 writing tests)
+
+**Results**:
+- **TextFormatter**: Human-readable reports with summary statistics, quality indicators (🟢🟡🔴)
+- **CSVFormatter**: Tabular data with peak info, methyl info, coordinates, confidence scores
+- **PyMOLFormatter**: Visualization scripts with confidence-based coloring and labels
+- **Test Coverage**: 25 writing tests covering all formatters and integration scenarios
+- **Notebooks**: 2 comprehensive demos (generic + YME1L-specific)
 
 ---
 
@@ -245,7 +255,8 @@
   - ✅ Phase 1 - Foundation & File Readers
   - ✅ Phase 2 - Graph Construction
   - ✅ Phase 3 - Matching Algorithms
-- **Next Phase**: Phase 4 - Output & Utilities
+  - ✅ Phase 4 - Output & Utilities
+- **Next Phase**: Phase 5 - Scripts & Configuration
 - **Branch**: `new-python-project`
 - **Last Updated**: 2025-11-22
 
@@ -285,6 +296,24 @@
 - Network statistics and visualization tools
 - Parameter sensitivity analysis
 - 55 total tests passing (34 reading + 21 preprocessing)
+
+### Phase 4 Summary
+
+**Completed Components**:
+- ✅ **TextFormatter** (205 lines): Human-readable reports with quality indicators
+- ✅ **CSVFormatter** (247 lines): Tabular data export with coordinates and metadata
+- ✅ **PyMOLFormatter** (348 lines): Visualization scripts with confidence-based coloring
+- ✅ **Test Suite** (25 tests): 100% pass rate covering all formatters
+- ✅ **Marimo Notebooks**: [writing_demo.py](notebooks/writing_demo.py) + [04_export_yme1l.py](notebooks/yme1l/04_export_yme1l.py)
+
+**Key Achievements**:
+- Three output formats for comprehensive result export
+- Confidence threshold filtering in all formatters
+- Quality classifications (high/medium/low) with visual indicators (🟢🟡🔴)
+- PyMOL visualization with confidence-based coloring (green/yellow/red/gray)
+- CSV export with optional coordinates and unassigned peaks tracking
+- Text reports with summary statistics and algorithm metadata
+- 122 total tests passing (34 reading + 21 preprocessing + 25 matching + 25 writing + 17 overlap)
 
 ---
 
@@ -361,7 +390,7 @@
 **Phase 1**: ✅ Parsers work with real data, tests pass (34/34 tests)
 **Phase 2**: ✅ Can build graphs from parsed data (21/21 tests, 55/55 total)
 **Phase 3**: ✅ Multiple algorithms produce valid assignments (25/25 tests, 80/80 total)
-**Phase 4**: Results exportable in 3+ formats
+**Phase 4**: ✅ Results exportable in 3+ formats (25/25 tests, 122/122 total)
 **Phase 5**: End-to-end workflow runs from CLI
 **Phase 6**: Ready for public release (docs, tests, CI/CD)
 
@@ -369,7 +398,7 @@
 
 ## Summary of Progress
 
-### Phases Completed: 3/6 (50%)
+### Phases Completed: 4/6 (67%)
 
 **Phase 1 (Foundation & File Readers)**: ✅ COMPLETED
 - 3 parsers implemented (1,107 lines)
@@ -391,4 +420,11 @@
 - Unified GraphMatcher interface for easy algorithm swapping
 - Confidence scoring and validation metrics
 
-**Next Steps**: Begin Phase 4 - Output & Utilities
+**Phase 4 (Output & Utilities)**: ✅ COMPLETED
+- 3 output formatters implemented (~900 lines)
+- 25 tests, 100% passing (122 total)
+- 2 interactive notebooks (generic + YME1L-specific)
+- Text, CSV, and PyMOL export formats
+- Confidence-based filtering and quality classifications
+
+**Next Steps**: Begin Phase 5 - Scripts & Configuration
