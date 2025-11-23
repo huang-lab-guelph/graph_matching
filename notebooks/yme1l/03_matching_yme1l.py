@@ -1,11 +1,12 @@
 """
 YME1L Part 3: Matching Algorithms Comparison
 
-This notebook applies all four matching algorithms to YME1L data and compares results:
+This notebook applies three matching algorithms to YME1L data and compares results:
 - GreedyMatcher
 - HungarianMatcher
 - QAPMatcher
-- SpectralMatcher
+
+Note: SpectralMatcher is excluded due to graph size (151 nodes > 80 node limit).
 """
 
 import marimo
@@ -25,14 +26,16 @@ def _(mo):
     mo.md("""
     # YME1L Part 3: Automated Methyl Assignment
 
-    This notebook performs automated methyl assignment for YME1L using all four graph matching algorithms:
+    This notebook performs automated methyl assignment for YME1L using three graph matching algorithms:
 
     1. **GreedyMatcher** - Fast heuristic approach
     2. **HungarianMatcher** - Optimal LAP solution
     3. **QAPMatcher** - Topology-aware matching (RECOMMENDED)
-    4. **SpectralMatcher** - Spectral graph matching
 
-    We'll compare their performance, confidence scores, and assignment quality.
+    **Note:** SpectralMatcher is excluded because YME1L graphs are too large (151 nodes).
+    SpectralMatcher is only practical for small graphs (<80 nodes) due to O(n⁴) memory requirements.
+
+    We'll compare the three algorithms' performance, confidence scores, and assignment quality.
     """)
     return
 
@@ -156,12 +159,17 @@ def _(
     validate_assignment,
 ):
     # Initialize all matchers
+    # Note: SpectralMatcher is excluded because YME1L graphs are too large (151 nodes)
+    # SpectralMatcher requires O(n^4) memory and is only practical for graphs <80 nodes
     matchers_yme1l = {
         'Greedy': GreedyMatcher(use_topology=True),
         'Hungarian': HungarianMatcher(),
         'QAP': QAPMatcher(method='faq', topology_weight=0.6, options={'maxiter': 50}),
-        'Spectral': SpectralMatcher(method='ipfp'),
+        # 'Spectral': SpectralMatcher(method='ipfp'),  # Skipped: too large for spectral matching
     }
+
+    print(f"Graph sizes: Experimental={G_exp_match.number_of_nodes()}, Structural={G_struct_match.number_of_nodes()}")
+    print(f"Note: SpectralMatcher skipped (graphs too large, requires <80 nodes)\n")
 
     # Run all matchers
     results_yme1l = {}
@@ -170,24 +178,29 @@ def _(
         print(f"Running {name_match}...")
         start_match = time.time()
 
-        result_match = matcher_match.match(G_exp_match, G_struct_match)
+        try:
+            result_match = matcher_match.match(G_exp_match, G_struct_match)
 
-        elapsed_match = time.time() - start_match
+            elapsed_match = time.time() - start_match
 
-        # Validate
-        metrics_match = validate_assignment(
-            result_match.assignments,
-            G_exp_match,
-            G_struct_match
-        )
+            # Validate
+            metrics_match = validate_assignment(
+                result_match.assignments,
+                G_exp_match,
+                G_struct_match
+            )
 
-        results_yme1l[name_match] = {
-            'result': result_match,
-            'runtime': elapsed_match,
-            'metrics': metrics_match,
-        }
+            results_yme1l[name_match] = {
+                'result': result_match,
+                'runtime': elapsed_match,
+                'metrics': metrics_match,
+            }
 
-        print(f"  {name_match}: {result_match.num_assignments} assignments in {elapsed_match:.2f}s")
+            print(f"  {name_match}: {result_match.num_assignments} assignments in {elapsed_match:.2f}s")
+
+        except Exception as e:
+            print(f"  {name_match}: FAILED - {type(e).__name__}: {e}")
+            # Continue with other matchers
 
     print("\nDone!")
     return (results_yme1l,)
@@ -233,7 +246,7 @@ def _(comparison_df_yme1l, mo):
 
     {mo.as_html(comparison_df_yme1l)}
 
-    The table shows comprehensive comparison of all four algorithms on YME1L data.
+    The table shows comprehensive comparison of the three algorithms on YME1L data.
     """)
     return
 
@@ -442,8 +455,11 @@ def _(mo):
 
     ✅ **Successfully performed automated methyl assignment for YME1L:**
 
-    All four algorithms have been tested and compared on real protein data.
+    Three algorithms have been tested and compared on real protein data.
     QAP provides the best overall performance with high confidence scores.
+
+    **Note:** SpectralMatcher was excluded due to computational constraints (requires <80 nodes).
+    For YME1L-sized proteins, use GreedyMatcher, HungarianMatcher, or QAPMatcher.
 
     ### Next Steps:
     1. **Export results** - Use Phase 4 writing module (coming soon)

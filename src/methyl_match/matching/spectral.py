@@ -167,6 +167,16 @@ class SpectralMatcher(GraphMatcher):
         conn1 = adj_exp
         conn2 = adj_struct
 
+        # Check if graph size is reasonable for spectral matching
+        # The affinity matrix is (n*n, n*n), which becomes impractical for large n
+        if max_size > 80:
+            raise ValueError(
+                f"SpectralMatcher is not suitable for large graphs (max_size={max_size}). "
+                f"The affinity matrix would be ({max_size*max_size}, {max_size*max_size}), "
+                f"requiring approximately {(max_size*max_size)**2 * 8 / 1e9:.2f} GB of memory. "
+                f"For graphs with >{max_size} nodes, use GreedyMatcher, HungarianMatcher, or QAPMatcher instead."
+            )
+
         # Build pairwise affinity tensor K
         # K[i*n2+j, a*n2+b] = node_sim[i,a] * node_sim[j,b] * edge_affinity[ij,ab]
         K = self._build_pairwise_affinity(similarity_matrix, adj_exp, adj_struct, max_size)
