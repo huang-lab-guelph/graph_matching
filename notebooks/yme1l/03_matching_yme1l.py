@@ -76,7 +76,6 @@ def _():
         PDBParser,
         PeakNetworkBuilder,
         QAPMatcher,
-        SpectralMatcher,
         pd,
         plt,
         project_root,
@@ -154,7 +153,6 @@ def _(
     GreedyMatcher,
     HungarianMatcher,
     QAPMatcher,
-    SpectralMatcher,
     time,
     validate_assignment,
 ):
