@@ -92,9 +92,10 @@ def _(
 
     print("Loading YME1L data...")
 
-    # Parse files
+    # Parse files - YME1L specific: only ILE, VAL, LEU, MET
     pdb_parser_export = PDBParser(str(data_dir_export / "yme1l.pdb"))
-    methyls_export = pdb_parser_export.extract_methyls()
+    yme1l_residue_types_export = ['ILE', 'VAL', 'LEU', 'MET']
+    methyls_export = pdb_parser_export.extract_methyls(residue_types=yme1l_residue_types_export)
 
     hmqc_parser_export = HMQCParser(str(data_dir_export / "hmqc.list"))
     hmqc_peaks_export = hmqc_parser_export.parse()
@@ -111,7 +112,7 @@ def _(
     network_exp_export = peak_builder_export.build_network(hmqc_peaks_export, noesy_peaks_export)
     G_exp_export = network_exp_export.graph
 
-    print(f"✓ Loaded {len(methyls_export)} methyls, {len(hmqc_peaks_export)} HMQC peaks, {len(noesy_peaks_export)} NOESY peaks")
+    print(f"✓ Loaded {len(methyls_export)} methyls (ILE, VAL, LEU, MET only), {len(hmqc_peaks_export)} HMQC peaks, {len(noesy_peaks_export)} NOESY peaks")
     print(f"✓ Built graphs: {G_struct_export.number_of_nodes()} structural nodes, {G_exp_export.number_of_nodes()} experimental nodes")
 
     # Run QAP matching
@@ -402,7 +403,7 @@ def _(
         'qap': QAPMatcher(method='faq', topology_weight=0.6, options={'maxiter': 50}),
     }
 
-    print("Exporting results from all algorithms...\n")
+    print("Exporting results from all algorithms (ILE, VAL, LEU, MET only)...\n")
 
     for algo_name_export, matcher_algo in algorithms_export.items():
         print(f"Running {algo_name_export}...")
@@ -417,7 +418,7 @@ def _(
             network_struct_export,
             network_exp_export,
             output_path=output_dir_yme1l / f"yme1l_assignments_{algo_name_export}.txt",
-            title=f"YME1L METHYL ASSIGNMENT RESULTS ({algo_name_export.upper()})",
+            title=f"YME1L METHYL ASSIGNMENT RESULTS ({algo_name_export.upper()}) - ILE, VAL, LEU, MET ONLY",
         )
 
         # Export CSV

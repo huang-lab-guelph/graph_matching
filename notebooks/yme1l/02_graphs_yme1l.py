@@ -80,9 +80,10 @@ def _(HMQCParser, NOESYParser, PDBParser, project_root):
     # Load all data
     data_dir_graph = project_root / "data" / "yme1l"
 
-    # Parse PDB
+    # Parse PDB - YME1L specific: only ILE, VAL, LEU, MET
     pdb_parser_g = PDBParser(str(data_dir_graph / "yme1l.pdb"))
-    methyls_g = pdb_parser_g.extract_methyls()
+    yme1l_residue_types_g = ['ILE', 'VAL', 'LEU', 'MET']
+    methyls_g = pdb_parser_g.extract_methyls(residue_types=yme1l_residue_types_g)
 
     # Parse HMQC
     hmqc_parser_g = HMQCParser(str(data_dir_graph / "hmqc.list"))
@@ -92,7 +93,7 @@ def _(HMQCParser, NOESYParser, PDBParser, project_root):
     noesy_parser_g = NOESYParser(str(data_dir_graph / "noesy.list"))
     noesy_peaks_g = noesy_parser_g.parse()
 
-    print(f"Loaded {len(methyls_g)} methyls, {len(hmqc_peaks_g)} HMQC peaks, {len(noesy_peaks_g)} NOESY peaks")
+    print(f"Loaded {len(methyls_g)} methyls (ILE, VAL, LEU, MET only), {len(hmqc_peaks_g)} HMQC peaks, {len(noesy_peaks_g)} NOESY peaks")
     return hmqc_peaks_g, methyls_g, noesy_peaks_g
 
 

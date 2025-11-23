@@ -131,24 +131,46 @@ class PDBParser:
             logger.error(f"Failed to parse PDB file: {e}")
             raise
 
-    def extract_methyls(self, chain_ids: Optional[List[str]] = None) -> List[MethylGroup]:
+    def extract_methyls(
+        self,
+        chain_ids: Optional[List[str]] = None,
+        residue_types: Optional[List[str]] = None
+    ) -> List[MethylGroup]:
         """
         Extract all methyl groups from the protein structure.
 
         Args:
             chain_ids: List of chain IDs to process. If None, process all chains.
+            residue_types: List of residue types to include (e.g., ['ILE', 'LEU', 'VAL']).
+                          If None, include all supported types (LEU, VAL, ILE, ALA, THR, MET).
+                          Must be a subset of METHYL_ATOMS keys.
 
         Returns:
             List of MethylGroup objects
 
+        Raises:
+            ValueError: If any residue_types are not in METHYL_ATOMS
+
         Example:
             >>> parser = PDBParser("1ubq.pdb")
+            >>> # Extract all methyl types from chain A
             >>> methyls = parser.extract_methyls(chain_ids=['A'])
+            >>> # Extract only ILE and LEU methyls
+            >>> ile_leu_methyls = parser.extract_methyls(residue_types=['ILE', 'LEU'])
             >>> for m in methyls[:3]:
             ...     print(f"{m.label}: {m.coordinates}")
         """
         if self.structure is None:
             self.parse()
+
+        # Validate residue_types if provided
+        if residue_types is not None:
+            invalid_types = set(residue_types) - set(self.METHYL_ATOMS.keys())
+            if invalid_types:
+                raise ValueError(
+                    f"Invalid residue types: {invalid_types}. "
+                    f"Must be one of: {list(self.METHYL_ATOMS.keys())}"
+                )
 
         methyls = []
 
@@ -167,6 +189,10 @@ class PDBParser:
 
                     # Check if this residue type has methyl groups
                     if res_name not in self.METHYL_ATOMS:
+                        continue
+
+                    # Filter by residue type if specified
+                    if residue_types is not None and res_name not in residue_types:
                         continue
 
                     # Extract each methyl carbon atom

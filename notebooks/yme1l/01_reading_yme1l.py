@@ -69,13 +69,14 @@ def _(PDBParser, project_root):
     data_dir = project_root / "data" / "yme1l"
     pdb_file = data_dir / "yme1l.pdb"
 
-    # Parse PDB
+    # Parse PDB - YME1L specific: only ILE, VAL, LEU, MET
     print(f"Reading: {pdb_file}")
     pdb_parser = PDBParser(str(pdb_file))
-    methyls_yme1l = pdb_parser.extract_methyls()
+    yme1l_residue_types = ['ILE', 'VAL', 'LEU', 'MET']
+    methyls_yme1l = pdb_parser.extract_methyls(residue_types=yme1l_residue_types)
 
-    print(f"\nExtracted {len(methyls_yme1l)} methyl groups")
-    return data_dir, methyls_yme1l
+    print(f"\nExtracted {len(methyls_yme1l)} methyl groups (ILE, VAL, LEU, MET only)")
+    return data_dir, methyls_yme1l, yme1l_residue_types
 
 
 @app.cell

@@ -76,6 +76,77 @@ class TestPDBParser:
         assert len(methyls) > 0
         assert all(m.chain_id == 'A' for m in methyls)
 
+    def test_extract_methyls_specific_residue_types(self):
+        """Test extraction of methyls from specific residue types."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        # Extract only ILE and LEU methyls
+        methyls_ile_leu = parser.extract_methyls(residue_types=['ILE', 'LEU'])
+
+        assert len(methyls_ile_leu) > 0
+        assert all(m.residue_name in ['ILE', 'LEU'] for m in methyls_ile_leu)
+        print(f"\nFound {len(methyls_ile_leu)} ILE/LEU methyls")
+
+        # Extract all methyls for comparison
+        all_methyls = parser.extract_methyls()
+        assert len(methyls_ile_leu) < len(all_methyls)
+
+    def test_extract_methyls_single_residue_type(self):
+        """Test extraction of methyls from single residue type."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        # Extract only ILE methyls
+        methyls_ile = parser.extract_methyls(residue_types=['ILE'])
+
+        assert all(m.residue_name == 'ILE' for m in methyls_ile)
+        print(f"\nFound {len(methyls_ile)} ILE methyls")
+
+    def test_extract_methyls_yme1l_subset(self):
+        """Test extraction with YME1L subset (ILE, VAL, LEU, MET)."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        # YME1L-specific subset
+        yme1l_types = ['ILE', 'VAL', 'LEU', 'MET']
+        methyls_yme1l = parser.extract_methyls(residue_types=yme1l_types)
+
+        assert all(m.residue_name in yme1l_types for m in methyls_yme1l)
+        print(f"\nFound {len(methyls_yme1l)} ILE/VAL/LEU/MET methyls")
+
+    def test_extract_methyls_invalid_residue_type(self):
+        """Test that invalid residue types raise ValueError."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        with pytest.raises(ValueError, match="Invalid residue types"):
+            parser.extract_methyls(residue_types=['XXX', 'YYY'])
+
+    def test_extract_methyls_empty_residue_types(self):
+        """Test extraction with empty residue_types list."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        # Empty list should return no methyls
+        methyls_empty = parser.extract_methyls(residue_types=[])
+        assert len(methyls_empty) == 0
+
+    def test_extract_methyls_chain_and_residue_filter(self):
+        """Test combining chain and residue type filters."""
+        pdb_file = TEST_DATA_DIR / "1ubq.pdb"
+        parser = PDBParser(str(pdb_file))
+
+        # Filter by both chain and residue type
+        methyls_filtered = parser.extract_methyls(
+            chain_ids=['A'],
+            residue_types=['ILE', 'LEU']
+        )
+
+        assert all(m.chain_id == 'A' for m in methyls_filtered)
+        assert all(m.residue_name in ['ILE', 'LEU'] for m in methyls_filtered)
+        print(f"\nFound {len(methyls_filtered)} ILE/LEU methyls in chain A")
+
     def test_methyl_group_label_format(self):
         """Test that methyl labels follow expected format."""
         pdb_file = TEST_DATA_DIR / "1ubq.pdb"

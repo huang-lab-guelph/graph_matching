@@ -104,9 +104,10 @@ def _(
     # Load all data
     data_dir_match = project_root / "data" / "yme1l"
 
-    # Parse files
+    # Parse files - YME1L specific: only ILE, VAL, LEU, MET
     pdb_parser_match = PDBParser(str(data_dir_match / "yme1l.pdb"))
-    methyls_match = pdb_parser_match.extract_methyls()
+    yme1l_residue_types_match = ['ILE', 'VAL', 'LEU', 'MET']
+    methyls_match = pdb_parser_match.extract_methyls(residue_types=yme1l_residue_types_match)
 
     hmqc_parser_match = HMQCParser(str(data_dir_match / "hmqc.list"))
     hmqc_peaks_match = hmqc_parser_match.parse()
@@ -123,7 +124,7 @@ def _(
     network_exp_match = peak_builder_match.build_network(hmqc_peaks_match, noesy_peaks_match)
     G_exp_match = network_exp_match.graph
 
-    print(f"YME1L Graphs:")
+    print(f"YME1L Graphs (ILE, VAL, LEU, MET only):")
     print(f"  Structural: {G_struct_match.number_of_nodes()} nodes, {G_struct_match.number_of_edges()} edges")
     print(f"  Experimental: {G_exp_match.number_of_nodes()} nodes, {G_exp_match.number_of_edges()} edges")
     return G_exp_match, G_struct_match

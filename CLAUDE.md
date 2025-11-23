@@ -72,6 +72,9 @@ tests/
 - **Purpose**: Parse specialized NMR and structural files
 - **Key Classes**:
   - `PDBParser` - Extracts methyl groups from PDB structure files
+    - Supports filtering by chain IDs (`chain_ids` parameter)
+    - Supports filtering by residue types (`residue_types` parameter)
+    - Supported residue types: LEU, VAL, ILE, ALA, THR, MET
   - `NOESYParser` - Parses 13C-13C-1H methyl-methyl NOESY peak lists (w1=13C methyl 1, w2=13C methyl 2, w3=1H)
   - `HMQCParser` - Parses 1H-13C HMQC peak lists (chemical shifts)
 - **Supported Formats**: XEASY, NMRPipe, Sparky, CSV
@@ -121,6 +124,27 @@ uv run python scripts/run_yme1l.py
 
 # Direct Python
 python -m methyl_match --data-dir data/sample1
+```
+
+### Parsing PDB Files with Filtering
+```python
+from methyl_match.reading import PDBParser
+
+# Extract all methyl types
+parser = PDBParser("protein.pdb")
+all_methyls = parser.extract_methyls()
+
+# Filter by chain
+chain_a_methyls = parser.extract_methyls(chain_ids=['A'])
+
+# Filter by residue type (e.g., only ILE and LEU)
+ile_leu_methyls = parser.extract_methyls(residue_types=['ILE', 'LEU'])
+
+# Combine filters (chain A, only ILE/LEU/VAL/MET - typical for YME1L)
+filtered_methyls = parser.extract_methyls(
+    chain_ids=['A'],
+    residue_types=['ILE', 'LEU', 'VAL', 'MET']
+)
 ```
 
 ### Running Tests
